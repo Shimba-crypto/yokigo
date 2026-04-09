@@ -1,0 +1,1 @@
+Yokigo-pass1 = 'ronaldo'
