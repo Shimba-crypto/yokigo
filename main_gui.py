@@ -4,99 +4,104 @@ import hashlib
 import webbrowser
 import os
 import sys
+import subprocess
 
-class YokigoOS:
+class YokigoSystem:
     def __init__(self, root):
         self.root = root
-        self.root.title("YOKIGO v1.8 | NEON WRAITH")
-        self.root.geometry("500x400")
+        self.root.title("YOKIGO v2.0 | PROJECT HUB")
+        self.root.geometry("550x450")
         self.root.configure(bg="#050505")
         
         # Security: SHA-224 hash of '777'
         self.master_hash = "af2bdbe1aa9b6ec1e21071da31360e4535458c37d80007b7193ff074"
         
-        # Bind the Getaway Protocol (Boss Key) to the Escape key
+        # Emergency Trigger (Boss Key)
         self.root.bind("<Escape>", lambda e: self.trigger_getaway())
         
-        self.show_auth_gate()
+        self.boot_security()
 
-    def clear_ui(self):
+    def clear_gui(self):
         for widget in self.root.winfo_children():
             widget.destroy()
 
-    # --- PHASE 1: SECURITY GATE ---
-    def show_auth_gate(self):
-        self.clear_ui()
-        tk.Label(self.root, text="YOKIGO KERNEL", fg="#00f2ff", bg="#050505", 
-                 font=("Courier", 22, "bold")).pack(pady=40)
+    # --- PHASE 1: THE GATE ---
+    def boot_security(self):
+        self.clear_gui()
+        tk.Label(self.root, text="SYSTEM LOCKED", fg="#ff4b2b", bg="#050505", 
+                 font=("Courier", 20, "bold")).pack(pady=40)
         
-        tk.Label(self.root, text="INPUT CLEARANCE TOKEN", fg="white", bg="#050505", 
-                 font=("Courier", 9)).pack()
+        self.entry = tk.Entry(self.root, show="*", bg="#111", fg="#39ff14", 
+                             font=("Courier", 14), insertbackground="#39ff14", 
+                             justify="center", relief="flat")
+        self.entry.pack(pady=10, ipady=8, padx=60)
+        self.entry.focus_set()
+        self.entry.bind("<Return>", lambda e: self.verify())
 
-        self.token_entry = tk.Entry(self.root, show="*", bg="#1a1a1a", fg="#39ff14", 
-                                   insertbackground="#39ff14", font=("Courier", 14), 
-                                   justify='center', relief="flat")
-        self.token_entry.pack(pady=15, ipady=8, padx=50)
-        self.token_entry.focus_set()
-        
-        # Press Enter to authenticate
-        self.token_entry.bind("<Return>", lambda e: self.authenticate())
+        tk.Button(self.root, text="[ AUTHENTICATE ]", command=self.verify, 
+                  bg="#39ff14", fg="black", font=("Courier", 10, "bold"), 
+                  relief="flat", width=20).pack(pady=20)
 
-        tk.Button(self.root, text="[ INITIALIZE ]", command=self.authenticate, 
-                  bg="#00f2ff", fg="black", font=("Courier", 10, "bold"), 
-                  activebackground="#39ff14", relief="flat", width=20).pack(pady=20)
-
-    def authenticate(self):
-        token = self.token_entry.get()
-        if hashlib.sha224(token.encode()).hexdigest() == self.master_hash:
-            self.show_main_hub()
+    def verify(self):
+        if hashlib.sha224(self.entry.get().encode()).hexdigest() == self.master_hash:
+            self.load_dashboard()
         else:
-            messagebox.showerror("SECURITY", "INVALID TOKEN. LOGGED.")
-            self.token_entry.delete(0, tk.END)
+            messagebox.showerror("DENIED", "INCORRECT ACCESS TOKEN")
 
     # --- PHASE 2: THE HUB ---
-    def show_main_hub(self):
-        self.clear_ui()
-        self.root.geometry("800x500")
+    def load_dashboard(self):
+        self.clear_gui()
+        self.root.geometry("850x550")
         
-        # Top Status Bar
-        status_bar = tk.Frame(self.root, bg="#1a1a1a", height=30)
-        status_bar.pack(fill="x", side="top")
-        tk.Label(status_bar, text="STATUS: ENCRYPTED // ESC TO PURGE", fg="#39ff14", 
-                 bg="#1a1a1a", font=("Courier", 9)).pack(side="left", padx=10)
+        # Side Navigation
+        nav = tk.Frame(self.root, bg="#111", width=200)
+        nav.pack(side="left", fill="y")
+        
+        tk.Label(nav, text="YOKIGO OS", fg="#00f2ff", bg="#111", 
+                 font=("Courier", 14, "bold")).pack(pady=20)
 
-        # Main Layout
-        content = tk.Frame(self.root, bg="#050505")
-        content.pack(expand=True, fill="both", padx=30, pady=30)
+        # Buttons to launch your other scripts
+        self.nav_btn(nav, "DASHBOARD", None)
+        self.nav_btn(nav, "HACK SIM", lambda: self.run_script("hacked.py"))
+        self.nav_btn(nav, "SECURITY", lambda: self.run_script("Yokigo-passes.py"))
+        self.nav_btn(nav, "EMERGENCY", self.trigger_getaway)
 
-        # Left Column: Tools
-        tools_frame = tk.LabelFrame(content, text=" PROJECTS ", fg="#00f2ff", bg="#050505", font=("Courier", 10))
-        tools_frame.pack(side="left", fill="both", expand=True, padx=10)
+        # Main Display
+        self.display = tk.Frame(self.root, bg="#050505")
+        self.display.pack(side="right", expand=True, fill="both", padx=20, pady=20)
 
-        self.add_btn(tools_frame, "ZAZA DEFENDER 4.0", lambda: print("Launching Security..."))
-        self.add_btn(tools_frame, "ROBLOX EXPLOIT HUB", lambda: print("Booting Roblox..."))
-        self.add_btn(tools_frame, "TERMINAL SIMULATOR", lambda: print("Opening Terminal..."))
+        tk.Label(self.display, text=">> WELCOME, SHIMBA", fg="#39ff14", bg="#050505", 
+                 font=("Courier", 18)).pack(anchor="w")
+        
+        # Status Box
+        status_box = tk.Text(self.display, bg="#111", fg="white", font=("Courier", 10), 
+                             height=15, relief="flat", padx=10, pady=10)
+        status_box.pack(fill="x", pady=20)
+        status_box.insert("1.0", "[+] System: Operational\n[+] Network: Tunnel Active\n[+] Keybinds: ESC to Purge\n[+] Hub: V2.0 Loaded")
+        status_box.config(state="disabled")
 
-        # Right Column: Panic/Getaway
-        panic_frame = tk.LabelFrame(content, text=" PROTOCOLS ", fg="#ff4b2b", bg="#050505", font=("Courier", 10))
-        panic_frame.pack(side="right", fill="both", expand=True, padx=10)
+    def nav_btn(self, parent, text, cmd):
+        tk.Button(parent, text=text, command=cmd, fg="white", bg="#111", 
+                  relief="flat", font=("Courier", 10), pady=10, 
+                  activebackground="#222").pack(fill="x")
 
-        self.add_btn(panic_frame, "FORCE PURGE (ESC)", self.trigger_getaway, color="#ff4b2b")
-        self.add_btn(panic_frame, "WIPE CACHE", lambda: messagebox.showinfo("Yokigo", "Cache Purged."))
+    def run_script(self, script_name):
+        """Launches your other Python files in a new process."""
+        try:
+            subprocess.Popen([sys.executable, script_name])
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not find {script_name}")
 
-    def add_btn(self, parent, text, cmd, color="#00f2ff"):
-        tk.Button(parent, text=text, command=cmd, fg=color, bg="#1a1a1a", 
-                  font=("Courier", 10, "bold"), relief="flat", pady=10).pack(fill="x", pady=10, padx=10)
-
-    # --- PHASE 3: GETAWAY (EMERGENCY) ---
     def trigger_getaway(self):
-        # Open the decoy site immediately
-        webbrowser.open("https://www.google.com/search?q=grade+7+science+past+papers+zambia")
-        # Kill the app
+        """The Boss Key: Instantly runs getaway.py and closes the GUI."""
+        try:
+            subprocess.Popen([sys.executable, "getaway.py"])
+        except:
+            webbrowser.open("https://www.google.com/search?q=grade+7+past+papers+zambia")
         self.root.destroy()
         sys.exit()
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = YokigoOS(root)
+    app = YokigoSystem(root)
     root.mainloop()
